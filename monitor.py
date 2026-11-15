@@ -126,6 +126,26 @@ def poll():
             "raw_status": st}
 
 
+VPS_STATE_URL = ("https://raw.githubusercontent.com/Mercy2112/"
+                 "lenovo-stock-watch/master/vps_state.json")
+
+
+def fetch_vps_state():
+    """Read the primary VPS node's reported state (public repo, plain HTTP).
+
+    If the VPS already sent a Telegram alert for this exact status+price,
+    stay quiet -- two nodes, one notification.
+    """
+    try:
+        req = urllib.request.Request(
+            VPS_STATE_URL, headers={"User-Agent": "lenovo-watcher/1.0",
+                                    "Accept": "application/json"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return json.loads(r.read().decode("utf-8", "ignore"))
+    except Exception:
+        return None
+
+
 def load_state():
     try:
         with open(STATE) as f:
@@ -186,12 +206,24 @@ def main():
     cur["consecutive_failures"] = 0
     cur["last_error"] = None
     cur["node"] = "github-actions"
+    # "reported" marks that THIS node actually pushed a Telegram alert for
+    # the current status+price. The peer node reads this to avoid sending
+    # a duplicate notification for the same change.
+    cur["reported"] = False
     cur["last_ok"] = __import__("datetime").datetime.utcnow().isoformat(
         timespec="seconds")
     save_state(cur)
 
     print("status=%s price=%s list=%s stock=%s"
           % (cur["status"], cur["price"], cur["list_price"], cur["stock_count"]))
+
+    vps = fetch_vps_state()
+    if changed and prev_status is not None and vps \
+            and vps.get("reported") \
+            and vps.get("status") == cur["status"] \
+            and vps.get("price") == cur["price"]:
+        print("deduped: VPS already reported this change")
+        changed = False
 
     if changed and prev_status is not None:
         line = "[GH] Lenovo ThinkPad X1 Carbon Gen 13 (21NS0012US)\n"
@@ -211,6 +243,9 @@ def main():
             line += "\n" + " | ".join(extra)
         line += "\n" + URL
         telegram(line)
+        cur["reported"] = True
+        cur["reported_at"] = cur.get("last_ok")
+        save_state(cur)
 
     return 0
 
