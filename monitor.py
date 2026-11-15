@@ -186,6 +186,8 @@ def main():
     cur["consecutive_failures"] = 0
     cur["last_error"] = None
     cur["node"] = "github-actions"
+    cur["last_ok"] = __import__("datetime").datetime.utcnow().isoformat(
+        timespec="seconds")
     save_state(cur)
 
     print("status=%s price=%s list=%s stock=%s"

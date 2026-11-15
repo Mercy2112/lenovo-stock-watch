@@ -9,5 +9,6 @@
   "raw_status": 2,
   "consecutive_failures": 0,
   "last_error": null,
-  "node": "github-actions"
+  "node": "github-actions",
+  "last_ok": "2026-11-15T03:05:11"
 }
