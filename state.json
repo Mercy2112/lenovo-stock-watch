@@ -1,7 +1,7 @@
 {
   "status": "not_yet",
   "stock_count": 0,
-  "price": 1532.12,
+  "price": 1248.99,
   "list_price": 3099.0,
   "delivery_date": null,
   "lead_time": null,
@@ -10,6 +10,7 @@
   "consecutive_failures": 0,
   "last_error": null,
   "node": "github-actions",
-  "reported": false,
-  "last_ok": "2026-11-19T15:30:09+00:00"
+  "reported": true,
+  "last_ok": "2026-11-19T15:56:15+00:00",
+  "reported_at": "2026-11-19T15:56:15+00:00"
 }
