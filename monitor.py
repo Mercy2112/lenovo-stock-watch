@@ -16,6 +16,7 @@ import os
 import re
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
 
 PN = "21NS0012US"
 ZIP = "60654"
@@ -207,11 +208,13 @@ def main():
     cur["last_error"] = None
     cur["node"] = "github-actions"
     # "reported" marks that THIS node actually pushed a Telegram alert for
-    # the current status+price. The peer node reads this to avoid sending
-    # a duplicate notification for the same change.
-    cur["reported"] = False
-    cur["last_ok"] = __import__("datetime").datetime.utcnow().isoformat(
-        timespec="seconds")
+    # the current status+price. It is STICKY: it stays true for as long as
+    # status+price are unchanged. If it were reset on every run, the peer
+    # node would send a duplicate alert on its next poll (the peer would
+    # see reported=false and conclude nobody had announced the change).
+    same_state = (prev_status == cur["status"] and prev_price == cur["price"])
+    cur["reported"] = bool(prev.get("reported")) and same_state
+    cur["last_ok"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     save_state(cur)
 
     print("status=%s price=%s list=%s stock=%s"
